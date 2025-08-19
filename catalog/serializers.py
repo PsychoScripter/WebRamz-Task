@@ -1,6 +1,6 @@
 # catalog/serializers.py
 from rest_framework import serializers
-from catalog.models import Product, Category, Tag
+from catalog.models import Product, Category, Tag, Review
 from decimal import Decimal, InvalidOperation
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -44,6 +44,11 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = ["id", "name", "description", "price", "stock", "category", "category_id", "tags", "average_rating"]
 
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ["id", "product", "rating", "comment"]
 
 
 class TagSerializer(serializers.ModelSerializer):

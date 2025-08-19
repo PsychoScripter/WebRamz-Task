@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import Avg, Prefetch
-
+from django.conf import settings
 
 # Create your models here.
 
@@ -45,6 +45,9 @@ class Product(models.Model):
 
     objects = ProductQuerySet.as_manager()
 
+    def __str__(self):
+        return self.name
+
 
 class Review(models.Model):
     product = models.ForeignKey(
@@ -52,11 +55,21 @@ class Review(models.Model):
         related_name="reviews",
         on_delete=models.CASCADE
     )
-    rating = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="reviews",
+        on_delete=models.CASCADE,
+        null=True, blank=True
     )
-    comment = models.TextField(blank=True)
+    rating = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5),],
+        null=True, blank=True
+    )
+    comment = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ("product", "user")
+
     def __str__(self):
-        return f"Review for {self.product.name} - {self.rating} stars"
+        return f"{self.product.name} - {self.rating} by {self.user}"

@@ -1,9 +1,12 @@
 from rest_framework import viewsets, filters
-from catalog.models import Product, Tag, Category
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
+from catalog.models import Product, Tag, Category, Review
 from .permissions import IsAdminOrReadOnly
-from .serializers import ProductSerializer, CategorySerializer, TagSerializer
+from .serializers import ProductSerializer, CategorySerializer, TagSerializer, ReviewSerializer
 from drf_spectacular.utils import extend_schema_view, extend_schema
 
+from catalog.services import process_order
 @extend_schema_view(
     list=extend_schema(description="Retrieve a list of products. Anyone can read, only admins can modify."),
     retrieve=extend_schema(description="Retrieve single product details")
@@ -28,6 +31,15 @@ class ProductViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(tags__name__in=tags_list).distinct()
 
         return queryset
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = [AllowAny]
+
+    def perform_create(self, serializer):
+        user = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(user=user)
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
