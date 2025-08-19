@@ -4,9 +4,10 @@ from catalog.models import Product, Category, Tag
 from decimal import Decimal, InvalidOperation
 
 class CategorySerializer(serializers.ModelSerializer):
+    parent = serializers.StringRelatedField()
     class Meta:
         model = Category
-        fields = ["id", "name"]
+        fields = ["id", "name", "parent"]
 
 class PriceField(serializers.DecimalField):
     def to_internal_value(self, data):
@@ -25,18 +26,27 @@ class PriceField(serializers.DecimalField):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    category = serializers.StringRelatedField()  # show category
-    tags = serializers.SlugRelatedField(many=True, read_only=True, slug_field="name")
+    category = CategorySerializer(read_only=True)
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        source="category",
+        write_only=True
+    )
+    tags = serializers.SlugRelatedField(
+        many=True,
+        slug_field="name",
+        queryset=Tag.objects.all()
+    )
     average_rating = serializers.FloatField(read_only=True)
     price = PriceField(max_digits=10, decimal_places=2)
 
     class Meta:
         model = Product
-        fields = ["id", "name", "description", "price", "stock", "category", "tags", "average_rating"]
+        fields = ["id", "name", "description", "price", "stock", "category", "category_id", "tags", "average_rating"]
 
 
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ["id", "name"]
+        fields = ["id", "name" ]
